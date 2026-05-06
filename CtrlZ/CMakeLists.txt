@@ -23,9 +23,6 @@ if(USE_OPENVINO)
     message(STATUS "OpenVINO default device: ${OPENVINO_DEVICE}")
     find_package(OpenVINO REQUIRED)
 else()
-    if(UNIX)
-        find_package(onnxruntime REQUIRED)
-    endif()
     message(STATUS "Using ONNXRuntime for neural network inference")
 endif()
 
@@ -93,7 +90,17 @@ else()
             ${ONNXRUNTIME_ROOT}/lib/onnxruntime.lib)
     elseif(UNIX)
         message("Build on unix like system")
-        target_link_libraries(CtrlZ PUBLIC onnxruntime::onnxruntime)
+        target_include_directories(CtrlZ PUBLIC
+            ${ONNXRUNTIME_ROOT}/include
+            ${ONNXRUNTIME_ROOT}/include/onnxruntime)
+        message("${ONNXRUNTIME_ROOT}/include")
+        set(ONNXRUNTIME_LIBRARIES
+            ${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so)
+        if(EXISTS "${ONNXRUNTIME_ROOT}/lib/libonnxruntime_providers_shared.so")
+            list(APPEND ONNXRUNTIME_LIBRARIES
+                ${ONNXRUNTIME_ROOT}/lib/libonnxruntime_providers_shared.so)
+        endif()
+        target_link_libraries(CtrlZ PUBLIC ${ONNXRUNTIME_LIBRARIES})
     else()
         message(FATAL_ERROR "Unsupported platform")
     endif()
